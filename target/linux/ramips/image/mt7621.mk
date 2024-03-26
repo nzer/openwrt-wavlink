@@ -2141,10 +2141,11 @@ TARGET_DEVICES += telco-electronics_x1
 
 define Device/tenbay_t-mb5eu-v01
   $(Device/dsa-migration)
+  # $(Device/uimage-lzma-loader)
   DEVICE_VENDOR := Tenbay
   DEVICE_MODEL := T-MB5EU-V01
   DEVICE_DTS_CONFIG := config@1
-  DEVICE_PACKAGES += kmod-mt7915-firmware kmod-usb3 -uboot-envtools
+  DEVICE_PACKAGES += kmod-mt7915-firmware kmod-usb3 uboot-envtools partx-utils kmod-i2c-core kmod-eeprom-at24 i2c-tools kmod-sdhci-mt7620
   KERNEL := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
   IMAGE_SIZE := 15808k
   SUPPORTED_DEVICES += mt7621-dm2-t-mb5eu-v01-nor

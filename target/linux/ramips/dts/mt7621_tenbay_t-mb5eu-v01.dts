@@ -25,75 +25,56 @@
 	leds {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
-		pinctrl-0 = <&led_pins>;
 
 		led_blue: blue {
 			label = "blue";
-			gpios = <&aw9523 0 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
+			default-state = "off";
 		};
 
 		led_red: red {
 			label = "red";
-			gpios = <&aw9523 1 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio 6 GPIO_ACTIVE_LOW>;
+			default-state = "off";
 		};
 
 		led_green: green {
 			label = "green";
-			gpios = <&aw9523 11 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
 		};
 	};
 
 	keys {
-		compatible = "gpio-keys-polled";
-		poll-interval = <50>;
+		compatible = "gpio-keys";
 		pinctrl-names = "default";
-		pinctrl-0 = <&button_pins>;
 
 		reset {
 			label = "reset";
-			gpios = <&aw9523 9 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio 18 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_RESTART>;
 		};
 
 		wps {
 			label = "wps";
-			gpios = <&aw9523 8 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio 16 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_WPS_BUTTON>;
 		};
 	};
+};
 
-	i2c-gpio {
-		#address-cells = <1>;
-		#size-cells = <0>;
+&i2c {
+	status = "okay";
 
-		compatible = "i2c-gpio";
-		gpios = <&gpio 7 GPIO_ACTIVE_HIGH &gpio 8 GPIO_ACTIVE_HIGH>;
-		i2c-gpio,delay-us = <10>;
+	at24@50 {
+		compatible = "atmel,24c02";
+		reg = <0x50>;
+		pagesize = <16>;
+	};
 
-		aw9523: gpio-expander@5b {
-			compatible = "awinic,aw9523-pinctrl";
-			reg = <0x5b>;
-			gpio-controller;
-			#gpio-cells = <2>;
-			gpio-ranges = <&aw9523 0 0 16>;
-
-			reset-gpios = <&gpio 6 GPIO_ACTIVE_HIGH>;
-
-			button_pins: button-pins {
-				pins = "gpio8", "gpio9";
-				function = "gpio";
-				bias-pull-up;
-				drive-open-drain;
-				input-enable;
-			};
-
-			led_pins: led-pins {
-				pins = "gpio0", "gpio1", "gpio11";
-				function = "gpio";
-				input-disable;
-				output-low;
-			};
-		};
+	at24@51 {
+		compatible = "atmel,24c02";
+		reg = <0x51>;
+		pagesize = <16>;
 	};
 };
 
@@ -105,22 +86,24 @@
 	wifi@0,0 {
 		compatible = "mediatek,mt76";
 		reg = <0x0 0 0 0 0>;
-		mediatek,mtd-eeprom = <&factory 0x0>;
+		mediatek,mtd-eeprom = <&factory 0x0000>;
 		mediatek,disable-radar-background;
 	};
 };
 
 &gmac0 {
-	nvmem-cells = <&macaddr_factory_4>;
+	phy-mode = "rgmii";
+	nvmem-cells = <&macaddr_factory_4 (-1)>;
 	nvmem-cell-names = "mac-address";
 };
 
 &gmac1 {
 	status = "okay";
 	label = "wan";
+	phy-mode = "rgmii";
 	phy-handle = <&ethphy0>;
 
-	nvmem-cells = <&macaddr_factory_4>;
+	nvmem-cells = <&macaddr_factory_4 (-2)>;
 	nvmem-cell-names = "mac-address";
 	mac-address-increment = <(-2)>;
 };
@@ -157,7 +140,7 @@
 
 &state_default {
 	gpio {
-		groups = "uart3";
+		groups = "uart2", "uart3";
 		function = "gpio";
 	};
 };
@@ -207,6 +190,11 @@
 		};
 	};
 };
+
+&sdhci {
+	status = "disabled";
+};
+
 
 &factory {
 	compatible = "nvmem-cells";
